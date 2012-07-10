@@ -1,0 +1,212 @@
+<html>
+
+<head>
+	<title>video poker testing</title>
+</head>
+
+<body>
+	<script src="resources.js"></script>
+<script>
+var c = null, ctx = null;
+var game = null;
+var animFrame =null; // animation stuff
+
+var START_SUIT = C = 0, D = 1, H = 2, S = 3, END_SUIT = S + 1;
+var TWO = 2, THREE = 3, FOUR = 4,
+	FIVE = 5, SIX = 6, SEVEN = 7,
+	EIGHT = 8, NINE = 9, TEN = 10,
+	JACK = 11, QUEEN = 12, KING = 13,
+	ACE = START_RANK = 1, END_RANK = KING+1;
+
+function Card(rank, suit) {
+	this.rank = rank;
+	this.suit = suit;
+	return this;
+}
+Card.prototype.report = function() {
+	console.log(this.rank + " " + this.suit);
+}
+Card.prototype.make_filename = function() {
+	//console.log("this.rank " + this.rank + " this.suit: " + this.suit);
+	return transr[this.rank] + transs[this.suit] + ".gif";
+}
+function Deck(num_decks) {
+	this.num_decks = num_decks;
+	this.cc = 0;
+	this.h = new Array();
+	return this;
+}
+Deck.prototype.init = function() {
+	this.cc = 0;
+	for(var i=START_SUIT;i<END_SUIT;i++) {
+		for(var j=START_RANK;j<END_RANK;j++) {
+			this.h.push(new Card(j,i));
+		}
+	}
+}
+Deck.prototype.shuffle = function(count) {
+	this.cc = 0; // assume if we call shuffle we are really reseting deck
+	for(var j,x, i = this.h.length;
+		i; j =parseInt(Math.random()*i), x = this.h[--i], this.h[i] = this.h[j], this.h[j]=x);
+}
+Deck.prototype.report = function() {
+	for(var i=0;i<this.h.length;i++) {
+		this.h[i].report();
+	}
+}
+Deck.prototype.get = function() {
+	return this.h[this.cc++];
+};
+function Hand() {
+	this.h = new Array();
+	return this;
+}
+Hand.prototype.get = function(deck) {
+	for(var i=0;i<5;i++) {
+		this.h[i] = deck.get();
+	}
+};
+Hand.prototype.report = function() {
+	for(var i=0;i<this.h.length;i++) {
+		this.h[i].report();
+	}
+};
+
+
+// TODO: not sure if this is great...
+// FIX THIS,
+Hand.prototype.canvas_display = function() {
+	var SCALEX =80, SCALEY = 100;
+	var c0 = this.h[0];
+	//console.log(c0);
+	//if (c0==null) return;
+	//ctx.drawImage((c0.rank*4)+c0.suit, 0,0, SCALEX, SCALEY);
+	//ctx.drawImage((this.h[0].rank*4)+this.h[0].suit)
+//	function load_image(name) {
+//		var i = new Image();
+//		i.src = name;
+//		i.onload = function() {
+//
+//		}
+//		return i;
+//	}
+
+//	var j = 0;
+//	var f0 = this.h[j].make_filename();
+//	if (IMGS[f0]==null) {
+//		var i = load_image(f0);
+//		IMGS[f0] = i;
+//	} else {
+//		if (IMGS[f0]!=null) {
+//			ctx.drawImage(IMGS[f0],j*90,0,80,100);
+//		}
+//	}
+}
+
+function clicker() {
+	var d = new Deck();
+	d.init();
+	d.shuffle();
+	var h = new Hand();
+	h.get(d);
+	h.report();
+
+	h.canvas_display();
+}
+
+/*
+handles preloading images
+http://gamedev.stackexchange.com/questions/24102/resource-loader-for-a-html5-and-javascript-game
+*/
+function preload_images() {
+	var ALLIMAGES = []; // array
+	var loadedImages = 0;
+	var numImages = 0;
+	for(var src in resources) {
+		numImages++;
+	}
+	for(var src in resources) {
+		ALLIMAGES[src] = new Image();
+		ALLIMAGES[src].onload = function() {
+			if (++loadedImages >= numImages) {
+				console.log("LOADED ALL IMAGES");
+				// call a function to start the game here
+				// we are done loading our images...
+			}
+		}
+		ALLIMAGES[src].src = "imgs/" + resources[src];
+	}
+}
+
+function update_game() {
+
+}
+function draw_game() {
+	game.h.canvas_display();
+}
+function Game() {
+	this.d = new Deck();
+	this.d.init();
+	this.h = new Hand();
+	return this;
+}
+Game.prototype.init = function() {
+	this.d.shuffle();
+	this.h.get(this.d);
+}
+
+window.onload = function() {
+	// set up drawing context
+	c = document.getElementById("c");
+	ctx = c.getContext("2d");
+
+	// force image loads
+	preload_images();
+
+	// make game object
+	game = new Game();
+	game.init();
+
+	// start animation rolling
+	init_animation();
+}
+
+var mainloop = function() {
+	update_game();
+	draw_game();
+}
+
+function init_animation() {
+	console.log("finding animFrame");
+	animFrame = window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame ||
+		window.mozRequestAnimationFrame ||
+		window.oRequestAnimationFrame ||
+		window.msRequestAnimationFrame ||
+		null;
+	if (animFrame!=null) {
+		var recursive_anim = function() {
+			mainloop();
+			animFrame(recursive_anim);
+		}
+		animFrame( recursive_anim );
+	} else {
+		var ONE_FRAME_TIME = 1000.0/60.0;
+		setInterval(mainloop, ONE_FRAME_TIME);
+	}
+}
+
+</script>
+
+<input type="button" onclick="clicker()" value="test">
+
+<hr />
+
+<canvas id="c"
+	width="600"
+	height="400">
+</canvas>
+
+</body>
+
+</html>
