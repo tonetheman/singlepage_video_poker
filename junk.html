@@ -1,0 +1,157 @@
+<html>
+
+<head>
+	<!-- 
+		provides a javascript of names of card images that
+		need to be loaded: resources
+	-->
+	<script src="resources.js"></script>
+
+	<!--
+		this loads all the images
+		serially and will call callback
+		when it is finished loading
+	-->
+	<script>
+	var ALLIMAGES = [];
+	</script>
+
+	<script>
+	function preload_images(callback) {
+	var loadedImages = 0;
+	var numImages = 0;
+	for(var src in resources) {
+		numImages++;
+	}
+	console.log("num images to load is " + numImages);
+
+	for(var src in resources) {
+		ALLIMAGES[src] = new Image();
+		ALLIMAGES[src].onload = function() {
+			if (++loadedImages >= numImages) {
+				callback();
+				//console.log("LOADED ALL IMAGES");
+				// call a function to start the game here
+				// we are done loading our images...
+			}
+		}
+		ALLIMAGES[src].src = "imgs/" + resources[src];
+	}
+	return ALLIMAGES;
+}
+
+	</script>
+
+</head>
+
+<body>
+<canvas id="c"
+width="800" height="600"></canvas>
+
+<script>
+var ACE = 0, TWO=1, THREE = 2,
+FOUR =3, FIVE=4, SIX=5, SEVEN =6,
+EIGHT=7, NINE=8, TEN=9,
+JACK = 10, QUEEN = 11, KING=12;
+var C = 0, D = 1, H = 2, S = 3;
+var BACK0 = 52;
+
+function Card(rank,suit) {
+	this.rank = rank;
+	this.suit = suit;
+
+	this.get_image = function() {
+		return ALLIMAGES[this.rank*4 + this.suit];
+	}
+
+	return this;
+}
+
+function Deck() {
+	this.cards = [];
+	this.cc = 0;
+	for(var index_rank = 0; index_rank<KING+1; index_rank++) {
+		for(var index_suit = 0; index_suit<S+1; index_suit++) {
+			this.cards.push(new Card(index_rank, index_suit));
+		}
+	}
+	return this;
+}
+Deck.prototype.shuffle = function(count) {
+	this.cc = 0; // assume if we call shuffle we are really reseting deck
+	for(var j,x, i = this.cards.length;
+		i; j =parseInt(Math.random()*i), x = this.cards[--i], this.cards[i] = this.cards[j], this.cards[j]=x);
+	return this;
+}
+Deck.prototype.get = function() {
+	return this.cards[this.cc++];
+}
+
+function Hand(deck) {
+	this.cards = [];
+	this.deck = deck;
+
+	this.deal = function() {
+		this.cards.push(this.deck.get());
+		this.cards.push(this.deck.get());
+		this.cards.push(this.deck.get());
+		this.cards.push(this.deck.get());
+		this.cards.push(this.deck.get());
+	}
+
+	this.draw = function() {
+		ctx.drawImage(this.cards[0].get_image(), 0,0, 80,100);
+		ctx.drawImage(this.cards[1].get_image(), 80,0, 80,100);
+		ctx.drawImage(this.cards[2].get_image(), 160,0, 80,100);
+		ctx.drawImage(this.cards[3].get_image(), 240,0, 80,100);
+		ctx.drawImage(this.cards[4].get_image(), 320,0, 80,100);
+
+
+		ctx.drawImage(ALLIMAGES[BACK0], 0, 120, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 80, 120, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 160, 120, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 240, 120, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 320, 120, 80, 100);
+
+		ctx.drawImage(ALLIMAGES[BACK0], 0, 240, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 80, 240, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 160, 240, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 240, 240, 80, 100);
+		ctx.drawImage(ALLIMAGES[BACK0], 320, 240, 80, 100);
+
+
+	}
+	return this;
+}
+
+function run_game() {
+	var d0 = new Deck(), d1 = new Deck(), d2 = new Deck();
+	d0.shuffle();
+	var h0 = new Hand(d0), h1 = new Hand(d1), h2 = new Hand(d2);
+	h0.deal();
+
+	h0.draw();
+
+}
+
+</script>
+
+<script>
+var c = null, ctx = null;
+c = document.getElementById("c");
+
+window.onload = function() {
+	// set up drawing context
+	c = document.getElementById("c");
+	ctx = c.getContext("2d");
+	console.log("context is created");
+	preload_images(run_game);
+}
+
+</script>
+
+
+
+</body>
+
+</html>
